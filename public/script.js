@@ -167,7 +167,7 @@ let gameMode = 'ranked';
 let aiDifficulty = 'medium';
 let isOnlineMatch = false;
 let myOnlineSide = 'left';
-let lastSentInput = 0;
+let lastSentY = -1;
 const selectedSkins = { p1: 'classic', p2: 'classic', p3: 'classic', p4: 'classic' };
 
 // =========================================================
@@ -504,6 +504,7 @@ if (socket) {
     initAudio();
     isOnlineMatch = true;
     myOnlineSide = data.side;
+    lastSentY = -1;
     gameMode = data.mode === 'ranked' ? 'ranked' : 'online_informal';
 
     menusWrapper.classList.add('hidden');
@@ -545,19 +546,9 @@ if (socket) {
     ball.vx = state.ball.vx;
     ball.vy = state.ball.vy;
 
-    const myPaddle = myOnlineSide === 'left' ? paddles[0] : paddles[1];
+    // Solo actualizamos la barra del rival (tu barra la controla tu PC sin lag)
     const rivalPaddle = myOnlineSide === 'left' ? paddles[1] : paddles[0];
-    const serverMyY = myOnlineSide === 'left' ? state.leftY : state.rightY;
     const serverRivalY = myOnlineSide === 'left' ? state.rightY : state.leftY;
-
-    // Corrección suave para tu barra (evita tirones por el ping)
-    if (Math.abs(myPaddle.y - serverMyY) > 65) {
-      myPaddle.y = serverMyY;
-    } else {
-      myPaddle.y += (serverMyY - myPaddle.y) * 0.12;
-    }
-
-    // Movimiento suavizado para la barra del rival
     rivalPaddle.y += (serverRivalY - rivalPaddle.y) * 0.45;
 
     scoreP1 = state.scoreLeft;
@@ -1096,16 +1087,14 @@ function update(dt) {
     if (keys['KeyW'] || keys['ArrowUp']) dir -= 1;
     if (keys['KeyS'] || keys['ArrowDown']) dir += 1;
 
-    // Mueve tu barra al instante en tu pantalla (predicción local)
     const myPaddle = myOnlineSide === 'left' ? paddles[0] : paddles[1];
-    if (myPaddle) {
+    if (myPaddle && dir !== 0) {
       myPaddle.y += dir * PADDLE_SPEED * dt;
       myPaddle.y = Math.max(8, Math.min(H - myPaddle.h - 8, myPaddle.y));
-    }
-
-    if (dir !== lastSentInput && socket) {
-      lastSentInput = dir;
-      socket.emit('player_input', dir);
+      if (socket && Math.abs(myPaddle.y - lastSentY) > 0.5) {
+        lastSentY = myPaddle.y;
+        socket.emit('paddle_move', myPaddle.y);
+      }
     }
   } else {
     // Físicas locales
