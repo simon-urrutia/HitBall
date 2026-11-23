@@ -16,7 +16,6 @@ const WIN_SCORE = 10;
 const PADDLE_W = 16;
 const PADDLE_H = 104;
 const PADDLE_MARGIN = 28;
-const PADDLE_SPEED = 520;
 const BASE_BALL_SPEED = 430;
 
 const queues = {
@@ -44,8 +43,8 @@ function createRoom(p1, p2, mode) {
     id: roomId,
     mode,
     players: {
-      left:  { socket: p1.socket, skin: p1.skin, rankName: p1.rankName, y: H / 2 - PADDLE_H / 2, input: 0 },
-      right: { socket: p2.socket, skin: p2.skin, rankName: p2.rankName, y: H / 2 - PADDLE_H / 2, input: 0 }
+      left:  { socket: p1.socket, skin: p1.skin, rankName: p1.rankName, y: H / 2 - PADDLE_H / 2 },
+      right: { socket: p2.socket, skin: p2.skin, rankName: p2.rankName, y: H / 2 - PADDLE_H / 2 }
     },
     ball: { x: W / 2, y: H / 2, vx: 0, vy: 0, radius: 11 },
     scores: { left: 0, right: 0 },
@@ -62,7 +61,6 @@ function createRoom(p1, p2, mode) {
   p2.socket.roomId = roomId;
   p2.socket.side = 'right';
 
-  // Avisar a ambos jugadores que empezó el partido
   p1.socket.emit('match_found', {
     side: 'left',
     mode,
@@ -103,14 +101,7 @@ function resetRoomBall(room) {
 function updateRoom(room, dt) {
   if (room.matchOver) return;
 
-  // 1. Mover barras según el input de cada jugador
-  for (const side of ['left', 'right']) {
-    const pl = room.players[side];
-    pl.y += pl.input * PADDLE_SPEED * dt;
-    pl.y = Math.max(8, Math.min(H - PADDLE_H - 8, pl.y));
-  }
-
-  // 2. Mover pelota y chequear colisiones
+  // Mover pelota y chequear colisiones
   if (!room.waitingServe) {
     const ball = room.ball;
     const speedMag = Math.hypot(ball.vx, ball.vy);
@@ -220,7 +211,7 @@ function updateRoom(room, dt) {
     }
   }
 
-  // 3. Enviar estado sincronizado a ambos jugadores
+  // Enviar estado sincronizado a ambos jugadores
   io.to(room.id).emit('game_state', {
     ball: { x: room.ball.x, y: room.ball.y, vx: room.ball.vx, vy: room.ball.vy },
     leftY: room.players.left.y,
@@ -273,10 +264,10 @@ io.on('connection', (socket) => {
     removeFromQueues(socket.id);
   });
 
-  socket.on('player_input', (dir) => {
+  socket.on('paddle_move', (y) => {
     const room = rooms.get(socket.roomId);
-    if (!room || !socket.side) return;
-    room.players[socket.side].input = Math.max(-1, Math.min(1, dir));
+    if (!room || !socket.side || typeof y !== 'number') return;
+    room.players[socket.side].y = Math.max(8, Math.min(H - PADDLE_H - 8, y));
   });
 
   socket.on('launch_ball', () => {
