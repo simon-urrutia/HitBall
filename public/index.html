@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HitBall</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="menu-wrapper" id="menus-wrapper">
+    <!-- MENÚ PRINCIPAL -->
+    <section id="main-menu" class="menu-card">
+      <div class="ball-badge"></div>
+      <h1 class="game-title">HitBall</h1>
+      <p class="game-subtitle">Duelo arcade de ping pong · Primero a 10 goles</p>
+
+      <!-- Tarjeta de Perfil y Rango -->
+      <div class="rank-profile">
+        <div class="rank-header">
+          <span class="rank-tag">Tu Rango</span>
+          <strong id="profile-rank-name" class="rank-name">Clásico</strong>
+        </div>
+        <div class="rank-bar-bg">
+          <div id="profile-rank-bar" class="rank-bar-fill"></div>
+        </div>
+        <div class="rank-meta">
+          <span id="profile-rp">0 RP</span>
+          <span id="profile-next-rank">Siguiente: Neón (100 RP)</span>
+        </div>
+      </div>
+
+      <div class="menu-buttons">
+        <button id="btn-ranked" class="menu-btn ranked">🏆 Ranked Online (1 vs 1)</button>
+        <button id="btn-informal" class="menu-btn primary">🎮 Modo Informal</button>
+      </div>
+    </section>
+
+    <!-- SUBMENÚ INFORMAL -->
+    <section id="informal-menu" class="menu-card hidden">
+      <h2 class="skin-title">Modo Informal</h2>
+      <p class="skin-subtitle">Jugá sin arriesgar puntos de rango</p>
+
+      <div class="menu-buttons">
+        <button id="btn-online-informal" class="menu-btn accent">🌐 1 vs 1 · Online</button>
+        <button id="btn-friends" class="menu-btn primary">1 vs 1 · Local con amigos</button>
+        <button id="btn-ai" class="menu-btn secondary">1 vs 1 · Contra IA</button>
+        <button id="btn-2v2-friends" class="menu-btn secondary">2 vs 2 · Local Amigos vs Amigos</button>
+        <button id="btn-2v2-ai" class="menu-btn secondary">2 vs 2 · Local Amigos vs IA</button>
+        <button id="btn-informal-back" class="menu-btn secondary" style="margin-top: 6px;">Volver</button>
+      </div>
+    </section>
+
+    <!-- MENÚ DE SELECCIÓN DE BARRAS Y DIFICULTAD -->
+    <section id="skin-menu" class="menu-card skin-card hidden">
+      <h2 id="skin-mode-title" class="skin-title">Elegí tu barra</h2>
+      <p id="skin-subtitle" class="skin-subtitle">Desbloqueá más barras subiendo de rango en Ranked</p>
+
+      <div id="difficulty-box" class="difficulty-box hidden">
+        <span class="difficulty-label">Dificultad de la IA:</span>
+        <div id="difficulty-options" class="difficulty-options"></div>
+      </div>
+
+      <div id="selectors-container" class="selectors-grid">
+        <div class="player-box">
+          <h3 id="p1-label">Jugador 1</h3>
+          <div class="preview-stage">
+            <div id="p1-preview" class="paddle-preview skin-classic"></div>
+          </div>
+          <div id="p1-options" class="skin-options"></div>
+        </div>
+
+        <div id="p2-box" class="player-box">
+          <h3 id="p2-label">Jugador 2</h3>
+          <div class="preview-stage">
+            <div id="p2-preview" class="paddle-preview skin-classic"></div>
+          </div>
+          <div id="p2-options" class="skin-options"></div>
+        </div>
+
+        <div id="p3-box" class="player-box hidden">
+          <h3 id="p3-label">Jugador 3</h3>
+          <div class="preview-stage">
+            <div id="p3-preview" class="paddle-preview skin-classic"></div>
+          </div>
+          <div id="p3-options" class="skin-options"></div>
+        </div>
+
+        <div id="p4-box" class="player-box hidden">
+          <h3 id="p4-label">Jugador 4</h3>
+          <div class="preview-stage">
+            <div id="p4-preview" class="paddle-preview skin-classic"></div>
+          </div>
+          <div id="p4-options" class="skin-options"></div>
+        </div>
+      </div>
+
+      <div class="skin-actions">
+        <button id="btn-back" class="menu-btn secondary">Volver</button>
+        <button id="btn-start-match" class="menu-btn primary">¡Empezar!</button>
+      </div>
+    </section>
+
+    <!-- PANTALLA BUSCANDO RIVAL ONLINE -->
+    <section id="queue-card" class="menu-card hidden">
+      <div class="ball-badge"></div>
+      <h2 id="queue-title" class="skin-title">Buscando rival...</h2>
+      <p class="skin-subtitle">Abrí otra pestaña en localhost:3000 para probarlo ya mismo</p>
+      <button id="btn-cancel-queue" class="menu-btn secondary">Cancelar búsqueda</button>
+    </section>
+  </main>
+
+  <!-- PANTALLA DE JUEGO -->
+  <section id="game-screen" class="game-screen hidden">
+    <div class="game-hud">
+      <div class="score-box">
+        <span id="hud-p1-name">Jugador 1</span>
+        <strong id="score-p1">0</strong>
+      </div>
+
+      <div class="rally-box">
+        <span id="rally-badge">🔥 Racha: 0</span>
+        <span id="speed-badge">x1.0</span>
+      </div>
+
+      <div class="score-box">
+        <strong id="score-p2">0</strong>
+        <span id="hud-p2-name">Jugador 2</span>
+      </div>
+
+      <button id="btn-exit-game" class="exit-btn">Menú</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="gameCanvas" width="960" height="560"></canvas>
+      <div id="serve-prompt" class="serve-prompt">Presioná ESPACIO para lanzar la pelota</div>
+
+      <div id="win-overlay" class="win-overlay hidden">
+        <div class="win-card">
+          <div class="win-trophy">🏆</div>
+          <h2 id="win-title">¡Ganó Jugador 1!</h2>
+          <p id="win-score">10 - 0</p>
+
+          <div id="ranked-result-box" class="ranked-result-box hidden">
+            <div id="ranked-rp-delta" class="rp-delta">+25 RP</div>
+            <div id="ranked-current-info" class="rp-current">Rango: Clásico · 25 RP</div>
+            <div id="ranked-unlock-alert" class="unlock-alert hidden"></div>
+          </div>
+
+          <div class="win-actions">
+            <button id="btn-rematch" class="menu-btn primary">Revancha</button>
+            <button id="btn-win-menu" class="menu-btn secondary">Menú principal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-controls-hint" class="controls-hint">
+      J1: W / S · J2: Flechas ↑ / ↓ · Espacio: Lanzar pelota
+    </div>
+  </section>
+
+  <!-- Librería cliente de Socket.io servida automáticamente por Node -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
