@@ -163,7 +163,7 @@ function updateProfileCard() {
   }
 }
 
-let gameMode = 'ranked'; // 'ranked', 'online_informal', 'friends', 'ai', '2v2_friends', '2v2_ai'
+let gameMode = 'ranked';
 let aiDifficulty = 'medium';
 let isOnlineMatch = false;
 let myOnlineSide = 'left';
@@ -410,7 +410,7 @@ function renderSkinOptions(playerKey, container, previewEl) {
 
 function enterOnlineQueue() {
   if (!socket) {
-    alert('No se pudo conectar al servidor. Asegurate de abrir el juego en http://localhost:3000');
+    alert('No se pudo conectar al servidor.');
     return;
   }
   const curRank = RANKS[getRankIndexFromRp(profile.rp)].name;
@@ -544,8 +544,22 @@ if (socket) {
     ball.y = state.ball.y;
     ball.vx = state.ball.vx;
     ball.vy = state.ball.vy;
-    paddles[0].y = state.leftY;
-    paddles[1].y = state.rightY;
+
+    const myPaddle = myOnlineSide === 'left' ? paddles[0] : paddles[1];
+    const rivalPaddle = myOnlineSide === 'left' ? paddles[1] : paddles[0];
+    const serverMyY = myOnlineSide === 'left' ? state.leftY : state.rightY;
+    const serverRivalY = myOnlineSide === 'left' ? state.rightY : state.leftY;
+
+    // Corrección suave para tu barra (evita tirones por el ping)
+    if (Math.abs(myPaddle.y - serverMyY) > 65) {
+      myPaddle.y = serverMyY;
+    } else {
+      myPaddle.y += (serverMyY - myPaddle.y) * 0.12;
+    }
+
+    // Movimiento suavizado para la barra del rival
+    rivalPaddle.y += (serverRivalY - rivalPaddle.y) * 0.45;
+
     scoreP1 = state.scoreLeft;
     scoreP2 = state.scoreRight;
     rally = state.rally;
@@ -1078,10 +1092,17 @@ function update(dt) {
   }
 
   if (isOnlineMatch) {
-    // En modo online solo enviamos nuestro input al servidor
     let dir = 0;
     if (keys['KeyW'] || keys['ArrowUp']) dir -= 1;
     if (keys['KeyS'] || keys['ArrowDown']) dir += 1;
+
+    // Mueve tu barra al instante en tu pantalla (predicción local)
+    const myPaddle = myOnlineSide === 'left' ? paddles[0] : paddles[1];
+    if (myPaddle) {
+      myPaddle.y += dir * PADDLE_SPEED * dt;
+      myPaddle.y = Math.max(8, Math.min(H - myPaddle.h - 8, myPaddle.y));
+    }
+
     if (dir !== lastSentInput && socket) {
       lastSentInput = dir;
       socket.emit('player_input', dir);
